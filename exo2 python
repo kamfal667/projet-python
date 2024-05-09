@@ -1,0 +1,75 @@
+import random
+
+class Case:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __str__(self):
+        return f"({self.x}, {self.y})"
+
+class Creature:
+    def __init__(self, nom, position):
+        self.nom = nom
+        self.position = position
+
+    def __str__(self):
+        return self.nom
+
+    def choisirCible(self, jeu):
+        cases_voisines = jeu.adjacentes(self.position)
+        for case in cases_voisines:
+            if jeu.estOccupee(case):
+                return case
+        return random.choice(cases_voisines)
+
+class Jeu:
+    def __init__(self, taille_x, taille_y):
+        self.listeDesCases = [Case(x, y) for x in range(taille_x) for y in range(taille_y)]
+        self.listeDesCreatures = []
+        self.tour = 0
+        self.actif = None
+
+    def __str__(self):
+        return f"Tour {self.tour}, Créature active : {self.actif}"
+
+    def estOccupee(self, case):
+        for creature in self.listeDesCreatures:
+            if creature.position == case:
+                return True
+        return False
+
+    def adjacentes(self, case):
+        adjacentes = []
+        for case_voisine in self.listeDesCases:
+            if abs(case_voisine.x - case.x) <= 1 and abs(case_voisine.y - case.y) <= 1:
+                adjacentes.append(case_voisine)
+        return adjacentes
+
+    def deplacer(self, creature, case):
+        if case in self.adjacentes(creature.position):
+            if self.estOccupee(case):
+                for adversaire in self.listeDesCreatures:
+                    if adversaire.position == case:
+                        print(f"{creature.nom} a gagné contre {adversaire.nom} !")
+                        self.listeDesCreatures.remove(adversaire)
+                        break
+            creature.position = case
+            self.tour += 1
+            self.actif = self.listeDesCreatures[self.tour % len(self.listeDesCreatures)]
+        else:
+            print(f"{creature.nom} ne peut pas se déplacer sur cette case.")
+
+# Initialisation du plateau
+jeu = Jeu(4, 4)
+creature1 = Creature("Créature 1", jeu.listeDesCases[0])
+creature2 = Creature("Créature 2", jeu.listeDesCases[-1])
+jeu.listeDesCreatures = [creature1, creature2]
+jeu.actif = creature1
+
+# Boucle de jeu
+while len(jeu.listeDesCreatures) > 1:
+    print(jeu)
+    cible = jeu.actif.choisirCible(jeu)
+    print(f"{jeu.actif.nom} se déplace vers {cible}")
+    jeu.deplacer(jeu.actif, cible)
